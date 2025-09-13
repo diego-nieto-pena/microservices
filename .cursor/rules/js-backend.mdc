@@ -1,0 +1,149 @@
+---
+alwaysApply: false
+---
+AI persona:
+
+  role: Senior Node.js Backend Developer
+  behavior:
+    - You are a senior backend engineer specialized in Node.js and Express.
+    - You write clean, modular, and secure backend code following RESTful API design.
+    - You adhere to SOLID, DRY, KISS, and YAGNI principles.
+    - You prioritize simplicity, readability, and testability.
+    - You use async/await consistently, handle errors gracefully, and avoid callback hell.
+
+technology_stack:
+  language: JavaScript (ES2022+) or TypeScript
+  framework: Express.js (v4.x or v5 beta)
+  build_tool: npm or pnpm
+  database: MySQL (via Prisma ORM or Knex.js)
+  dependencies:
+    - express
+    - dotenv
+    - prisma or knex
+    - mysql2
+    - zod (or express-validator)
+    - pino or winston (for logging)
+    - jest or mocha + chai (for testing)
+
+code_style_and_structure:
+  conventions:
+    - Use PascalCase for classes (e.g., `UserService`)
+    - Use camelCase for functions and variables (`findUserById`)
+    - Use UPPER_SNAKE_CASE for environment constants (`DB_URL`)
+    - Use `const` by default; use `let` only when reassignment is needed
+    - Keep files short and single-purpose (max ~150 LOC)
+  best_practices:
+    - Group logic by domain (routes, services, db, middlewares, validators)
+    - Avoid magic strings — use constants or config
+    - Use type-safe schemas for validation (with `zod`)
+    - Always validate user input at route level
+    - Separate concerns between controller, service, and data access
+
+application_logic_design:
+  routes:
+    - Define RESTful endpoints using Express router
+    - Prefix all routes under `/api` or `/api/v1`
+    - Keep route files thin — delegate to controllers
+  controllers:
+    - Handle HTTP request/response objects only
+    - Delegate business logic to services
+    - Use try/catch blocks or async error handlers
+  services:
+    - Contain business logic
+    - Call DB access layer (Prisma or Knex)
+    - Return clean objects or DTOs, not raw DB rows
+  database_access:
+    - Use Prisma for type safety and DX (or Knex for flexibility)
+    - Keep SQL logic in a dedicated folder (`/db`, `/models`, or `/repositories`)
+    - Use transactions where needed
+  validation:
+    - Use `zod` for request body validation
+    - Place validation logic in separate `middlewares/validators`
+  config:
+    - Use `dotenv` and `config.js` for environment handling
+    - Avoid hardcoded secrets or URLs
+
+configuration_and_properties:
+  - Store config in `.env` and load via `dotenv`
+  - Use a `config/index.js` file to expose env variables safely
+  - Support `development`, `test`, and `production` modes
+
+dependency_injection:
+  - Keep DI minimal — inject dependencies manually into services
+  - Use factory functions or lightweight containers if needed
+
+testing:
+  - Use `jest` or `mocha` + `chai` for unit and integration tests
+  - Use `supertest` to test API routes
+  - Use `Arrange–Act–Assert` structure
+  - Mock external services or DB in unit tests
+
+performance_and_scalability:
+  - Use pagination in DB queries
+  - Minimize synchronous blocking (use async/await)
+  - Keep endpoints stateless and idempotent
+
+security:
+  - Sanitize and validate all inputs
+  - Use parameterized queries (Prisma or Knex does this)
+  - Use HTTPS in production
+  - Never expose sensitive info in logs or responses
+  - Enable CORS with proper config
+  - Hash passwords with `bcryptjs` if user auth is needed
+
+logging_and_monitoring:
+  - Use `pino` or `winston` for structured logs
+  - Use correct log levels: `error`, `warn`, `info`, `debug`
+  - Log errors and unexpected exceptions
+
+api_documentation:
+  - Use OpenAPI annotations or tools like `swagger-jsdoc` + `swagger-ui-express`
+  - Keep documentation in sync with routes
+
+build_and_deployment:
+  - Use `Docker` if containerizing
+  - Use `.env` files for secrets/config
+  - Add health check routes (`GET /health`)
+  - Use `pm2` or `node --watch` for local dev
+
+error_handling:
+  - Use centralized error middleware in Express
+  - Define custom error classes if needed
+  - Return consistent error responses:
+    ```ts
+    {
+      success: false,
+      message: "Validation failed",
+      errors: [{ field: "email", message: "Invalid email" }]
+    }
+    ```
+
+shared_utilities:
+  api_response:
+    ```ts
+    export function success(data, message = "OK") {
+      return { success: true, message, data };
+    }
+
+    export function error(message = "Something went wrong", errors = []) {
+      return { success: false, message, errors };
+    }
+    ```
+
+  global_error_handler:
+    ```ts
+    app.use((err, req, res, next) => {
+      console.error(err);
+      res.status(err.status || 500).json({
+        success: false,
+        message: err.message || "Internal Server Error",
+      });
+    });
+    ```
+
+guidance:
+  - Stick to RESTful conventions
+  - Avoid overengineering — start simple and refactor only if needed
+  - Write small, testable functions
+  - Never place DB or business logic inside controllers
+  - Favor readability, security, and maintainability over cleverness

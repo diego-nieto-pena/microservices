@@ -1,0 +1,204 @@
+version: '3.8'
+
+services:
+  # Infrastructure Services
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    hostname: zookeeper
+    container_name: saga-zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - saga-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    hostname: kafka
+    container_name: saga-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+    networks:
+      - saga-network
+
+  # Database Services
+  postgres-order:
+    image: postgres:15-alpine
+    container_name: saga-postgres-order
+    environment:
+      POSTGRES_DB: orderdb
+      POSTGRES_USER: orderuser
+      POSTGRES_PASSWORD: orderpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_order_data:/var/lib/postgresql/data
+    networks:
+      - saga-network
+
+  postgres-risk:
+    image: postgres:15-alpine
+    container_name: saga-postgres-risk
+    environment:
+      POSTGRES_DB: riskdb
+      POSTGRES_USER: riskuser
+      POSTGRES_PASSWORD: riskpass
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_risk_data:/var/lib/postgresql/data
+    networks:
+      - saga-network
+
+  postgres-inventory:
+    image: postgres:15-alpine
+    container_name: saga-postgres-inventory
+    environment:
+      POSTGRES_DB: inventorydb
+      POSTGRES_USER: inventoryuser
+      POSTGRES_PASSWORD: inventorypass
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_inventory_data:/var/lib/postgresql/data
+    networks:
+      - saga-network
+
+  postgres-payment:
+    image: postgres:15-alpine
+    container_name: saga-postgres-payment
+    environment:
+      POSTGRES_DB: paymentdb
+      POSTGRES_USER: paymentuser
+      POSTGRES_PASSWORD: paymentpass
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_payment_data:/var/lib/postgresql/data
+    networks:
+      - saga-network
+
+  # Microservices
+  order-service:
+    build:
+      context: .
+      dockerfile: services/order-service/Dockerfile
+    container_name: saga-order-service
+    ports:
+      - "3001:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      KAFKA_BROKER: kafka:29092
+      DATABASE_URL: postgresql://orderuser:orderpass@postgres-order:5432/orderdb
+    depends_on:
+      - kafka
+      - postgres-order
+    networks:
+      - saga-network
+    volumes:
+      - ./services/order-service:/app
+      - /app/node_modules
+
+  risk-service:
+    build:
+      context: .
+      dockerfile: services/risk-service/Dockerfile
+    container_name: saga-risk-service
+    ports:
+      - "3002:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      KAFKA_BROKER: kafka:29092
+      DATABASE_URL: postgresql://riskuser:riskpass@postgres-risk:5432/riskdb
+    depends_on:
+      - kafka
+      - postgres-risk
+    networks:
+      - saga-network
+    volumes:
+      - ./services/risk-service:/app
+      - /app/node_modules
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: services/inventory-service/Dockerfile
+    container_name: saga-inventory-service
+    ports:
+      - "3003:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      KAFKA_BROKER: kafka:29092
+      DATABASE_URL: postgresql://inventoryuser:inventorypass@postgres-inventory:5432/inventorydb
+    depends_on:
+      - kafka
+      - postgres-inventory
+    networks:
+      - saga-network
+    volumes:
+      - ./services/inventory-service:/app
+      - /app/node_modules
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: services/payment-service/Dockerfile
+    container_name: saga-payment-service
+    ports:
+      - "3004:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      KAFKA_BROKER: kafka:29092
+      DATABASE_URL: postgresql://paymentuser:paymentpass@postgres-payment:5432/paymentdb
+    depends_on:
+      - kafka
+      - postgres-payment
+    networks:
+      - saga-network
+    volumes:
+      - ./services/payment-service:/app
+      - /app/node_modules
+
+  # Monitoring and Management
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: saga-kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+    networks:
+      - saga-network
+
+volumes:
+  postgres_order_data:
+  postgres_risk_data:
+  postgres_inventory_data:
+  postgres_payment_data:
+
+networks:
+  saga-network:
+    driver: bridge
