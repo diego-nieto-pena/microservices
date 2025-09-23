@@ -27,7 +27,7 @@ export class RiskController {
         message: 'Risk profile retrieved successfully',
         data: riskProfile,
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to get risk profile', { 
         customerId: req.params.customerId,
         error: error.message 
@@ -52,13 +52,13 @@ export class RiskController {
         message: 'Risk profile updated successfully',
         data: updatedProfile,
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to update risk profile', { 
         customerId: req.params.customerId,
         error: error.message 
       });
 
-      if (error.message === 'Risk profile not found') {
+      if ((error as any).message === 'Risk profile not found') {
         res.status(404).json({
           success: false,
           message: 'Risk profile not found',

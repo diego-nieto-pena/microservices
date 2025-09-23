@@ -12,11 +12,15 @@ export class PaymentService {
     private logger: Logger
   ) {}
 
-  async processPayment(orderId: string, customerId: string, amount: number, paymentMethodId: string): Promise<void> {
+  async processPayment(orderId: string, customerId: string, amount: number, paymentMethodId?: string): Promise<void> {
     this.logger.info('Processing payment for order', { orderId, customerId, amount, paymentMethodId });
     
     try {
       // Get payment method
+      if (!paymentMethodId) {
+        await this.publishPaymentFailed(orderId, customerId, amount, 'Payment method is required');
+        return;
+      }
       const paymentMethod = await this.paymentMethodRepository.getPaymentMethodById(paymentMethodId);
       
       if (!paymentMethod) {
@@ -63,7 +67,7 @@ export class PaymentService {
         await this.paymentTransactionRepository.updateTransactionStatus(
           transaction.id,
           PAYMENT_STATUS.COMPLETED,
-          paymentResult.transactionId
+          String(paymentResult.transactionId || `txn_${Date.now()}`)
         );
 
         // Publish PaymentProcessed event
@@ -88,9 +92,9 @@ export class PaymentService {
           PAYMENT_STATUS.FAILED
         );
 
-        await this.publishPaymentFailed(orderId, customerId, amount, paymentResult.reason);
+        await this.publishPaymentFailed(orderId, customerId, amount, paymentResult.reason ?? 'Payment failed');
       }
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to process payment', { 
         orderId, 
         customerId, 
@@ -121,7 +125,7 @@ export class PaymentService {
         orderId: event.data.orderId,
         transactionsProcessed: transactions.length 
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to process order cancellation', { 
         orderId: event.data.orderId,
         error: error.message 
@@ -169,7 +173,7 @@ export class PaymentService {
       await this.paymentTransactionRepository.updateTransactionStatus(
         transaction.id,
         PAYMENT_STATUS.REFUNDED,
-        `refund_${transaction.transactionId}`
+        `refund_${String(transaction.transactionId || transaction.id)}`
       );
 
       // Publish PaymentRefunded event
@@ -186,7 +190,7 @@ export class PaymentService {
         transactionId: transaction.id,
         amount: transaction.amount 
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to process refund', { 
         transactionId: transaction.id,
         error: error.message 

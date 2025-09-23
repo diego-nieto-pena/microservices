@@ -27,7 +27,7 @@ export class InventoryController {
         message: 'Product retrieved successfully',
         data: product,
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to get product', { 
         productId: req.params.productId,
         error: error.message 
@@ -49,7 +49,7 @@ export class InventoryController {
         message: 'Products retrieved successfully',
         data: products,
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to get products', { error: error.message });
 
       res.status(500).json({
@@ -87,7 +87,7 @@ export class InventoryController {
         message: 'Product stock updated successfully',
         data: product,
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to update product stock', { 
         productId: req.params.productId,
         error: error.message 
@@ -111,7 +111,7 @@ export class InventoryController {
         message: 'Product created successfully',
         data: product,
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to create product', { error: error.message });
 
       res.status(500).json({

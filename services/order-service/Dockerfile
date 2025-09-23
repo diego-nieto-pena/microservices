@@ -2,18 +2,40 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY shared/package*.json ./shared/
+# Install curl for health checks
+RUN apk add --no-cache curl
 
-# Install dependencies
+# Copy shared library first
+COPY shared/ ./shared/
+
+# Install shared library dependencies and build
+WORKDIR /app/shared
 RUN npm install
+RUN npm run build
 
-# Copy source code
-COPY . .
+# Copy service package files
+WORKDIR /app
+COPY services/order-service/package*.json ./
+
+# Install service dependencies
+RUN rm -f package-lock.json && \
+    npm pkg delete dependencies['@saga-pattern/shared'] || true && \
+    npm install
+
+# Copy the built shared library to node_modules
+RUN mkdir -p ./node_modules/@saga-pattern/shared && \
+    cp -r ./shared/dist ./node_modules/@saga-pattern/shared && \
+    cp ./shared/package.json ./node_modules/@saga-pattern/shared/package.json
+
+# Copy service source code
+COPY services/order-service/src ./src
+COPY services/order-service/tsconfig.json ./
 
 # Build the application
 RUN npm run build
+
+# Copy non-TS assets to the dist folder
+COPY services/order-service/src/database/migrations ./dist/database/migrations/
 
 # Expose port
 EXPOSE 3000

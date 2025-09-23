@@ -2,15 +2,34 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY shared/package*.json ./shared/
+# Install curl for health checks
+RUN apk add --no-cache curl
 
-# Install dependencies
+# Copy shared library first
+COPY shared/ ./shared/
+
+# Install shared library dependencies
+WORKDIR /app/shared
 RUN npm install
+RUN npm run build
 
-# Copy source code
-COPY . .
+# Copy service package files
+WORKDIR /app
+COPY services/payment-service/package*.json ./
+
+# Install service dependencies
+RUN rm -f package-lock.json && \
+    npm pkg delete dependencies['@saga-pattern/shared'] || true && \
+    npm install
+
+# Copy service source code
+COPY services/payment-service/src ./src
+COPY services/payment-service/tsconfig.json ./
+
+# Ensure shared is available in node_modules
+RUN mkdir -p ./node_modules/@saga-pattern/shared && \
+    cp -r ./shared/dist ./node_modules/@saga-pattern/shared && \
+    cp ./shared/package.json ./node_modules/@saga-pattern/shared/package.json
 
 # Build the application
 RUN npm run build

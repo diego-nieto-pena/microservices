@@ -21,13 +21,13 @@ export class OrderController {
         data: order,
       });
     } catch (error) {
-      this.logger.error('Failed to create order', { error: error.message });
+      this.logger.error('Failed to create order', { error: error instanceof Error ? error.message : String(error) });
       
-      if (error.name === 'ZodError') {
+      if (error && typeof error === 'object' && 'name' in error && error.name === 'ZodError') {
         res.status(400).json({
           success: false,
           message: 'Validation failed',
-          errors: error.errors,
+          errors: (error as any).errors,
         });
         return;
       }
@@ -61,7 +61,7 @@ export class OrderController {
     } catch (error) {
       this.logger.error('Failed to get order', { 
         orderId: req.params.orderId,
-        error: error.message 
+        error: error instanceof Error ? error.message : String(error)
       });
 
       res.status(500).json({
@@ -85,7 +85,7 @@ export class OrderController {
     } catch (error) {
       this.logger.error('Failed to get orders by customer', { 
         customerId: req.params.customerId,
-        error: error.message 
+        error: error instanceof Error ? error.message : String(error)
       });
 
       res.status(500).json({

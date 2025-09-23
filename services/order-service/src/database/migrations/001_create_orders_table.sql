@@ -23,6 +23,9 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+-- Drop the trigger if it exists to ensure idempotency
+DROP TRIGGER IF EXISTS update_orders_updated_at ON orders;
+
 -- Create trigger to automatically update updated_at
 CREATE TRIGGER update_orders_updated_at 
     BEFORE UPDATE ON orders 

@@ -27,7 +27,7 @@ export class PaymentController {
         message: 'Transaction retrieved successfully',
         data: transaction,
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to get transaction', { 
         transactionId: req.params.transactionId,
         error: error.message 
@@ -51,7 +51,7 @@ export class PaymentController {
         message: 'Transactions retrieved successfully',
         data: transactions,
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to get transactions by order', { 
         orderId: req.params.orderId,
         error: error.message 
@@ -75,7 +75,7 @@ export class PaymentController {
         message: 'Transactions retrieved successfully',
         data: transactions,
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to get transactions by customer', { 
         customerId: req.params.customerId,
         error: error.message 
@@ -99,7 +99,7 @@ export class PaymentController {
         message: 'Payment method created successfully',
         data: paymentMethod,
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to create payment method', { error: error.message });
 
       res.status(500).json({
@@ -120,7 +120,7 @@ export class PaymentController {
         message: 'Payment methods retrieved successfully',
         data: paymentMethods,
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to get payment methods', { 
         customerId: req.params.customerId,
         error: error.message 

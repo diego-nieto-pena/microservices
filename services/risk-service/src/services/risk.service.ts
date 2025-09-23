@@ -58,7 +58,7 @@ export class RiskService {
           reason: assessment.reason 
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to assess risk', { 
         orderId, 
         customerId, 

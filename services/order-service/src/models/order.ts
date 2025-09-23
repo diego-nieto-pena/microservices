@@ -10,7 +10,7 @@ export class OrderRepository {
     const now = new Date();
     
     const totalAmount = request.items.reduce(
-      (sum, item) => sum + (item.price * item.quantity),
+      (sum: number, item: OrderItem) => sum + (item.price * item.quantity),
       0
     );
 

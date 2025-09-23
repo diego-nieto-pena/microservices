@@ -1,4 +1,6 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+dotenv.config({ path: 'env' });
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -18,6 +20,9 @@ const logger = new Logger('order-service', LogLevel.INFO);
 
 async function startServer() {
   try {
+    // Delay to allow DB to initialize
+    await new Promise(res => setTimeout(res, 5000));
+
     // Initialize database
     await initializeDatabase();
     logger.info('Database initialized successfully');
@@ -46,8 +51,8 @@ async function startServer() {
     orderEventHandler.setupEventHandlers(kafkaConsumer);
 
     // Start consuming events
-    kafkaConsumer.run().catch(error => {
-      logger.error('Error in Kafka consumer', { error: error.message });
+    kafkaConsumer.run().catch((error: any) => {
+      logger.error('Error in Kafka consumer', { error: error instanceof Error ? error.message : String(error) });
     });
 
     // Initialize Express app
@@ -63,7 +68,7 @@ async function startServer() {
 
     // Global error handler
     app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-      logger.error('Unhandled error', { error: err.message, stack: err.stack });
+      logger.error('Unhandled error', { error: err instanceof Error ? err.message : String(err), stack: err instanceof Error ? err.stack : undefined });
       res.status(500).json({
         success: false,
         message: 'Internal server error',
@@ -93,7 +98,7 @@ async function startServer() {
     });
 
   } catch (error) {
-    logger.error('Failed to start server', { error: error.message });
+    logger.error('Failed to start server', { error: error instanceof Error ? error.message : String(error) });
     process.exit(1);
   }
 }

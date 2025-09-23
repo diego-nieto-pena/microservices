@@ -65,7 +65,10 @@ export class InventoryService {
           orderId,
           productId: item.productId,
           quantity: item.quantity,
-        });
+        // repository will set status/expiresAt/reservedAt; include status to satisfy type
+        status: 'ACTIVE',
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+      } as any);
 
         reservations.push({
           productId: item.productId,
@@ -101,7 +104,7 @@ export class InventoryService {
       await this.kafkaProducer.publishEvent(KAFKA_TOPICS.INVENTORY_EVENTS, inventoryReservedEvent);
       
       this.logger.info('Inventory reserved successfully for order', { orderId, reservations });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to reserve inventory', { 
         orderId, 
         error: error.message 
@@ -156,7 +159,7 @@ export class InventoryService {
         orderId: event.data.orderId,
         reservations: reservations.length 
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to release inventory for cancelled order', { 
         orderId: event.data.orderId,
         error: error.message 

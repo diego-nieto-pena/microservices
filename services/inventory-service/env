@@ -1,0 +1,4 @@
+PORT=3003
+LOG_LEVEL=info
+NODE_ENV=development
+DATABASE_URL=postgresql://inventoryuser:inventorypass@localhost:5434/inventorydb

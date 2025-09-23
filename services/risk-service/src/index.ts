@@ -1,4 +1,6 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+dotenv.config({ path: 'env' });
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -18,6 +20,9 @@ const logger = new Logger('risk-service', LogLevel.INFO);
 
 async function startServer() {
   try {
+    // Delay to allow DB to initialize
+    await new Promise(res => setTimeout(res, 5000));
+
     // Initialize database
     await initializeDatabase();
     logger.info('Database initialized successfully');
@@ -44,7 +49,7 @@ async function startServer() {
     riskEventHandler.setupEventHandlers(kafkaConsumer);
 
     // Start consuming events
-    kafkaConsumer.run().catch(error => {
+    kafkaConsumer.run().catch((error: any) => {
       logger.error('Error in Kafka consumer', { error: error.message });
     });
 
@@ -90,7 +95,7 @@ async function startServer() {
       process.exit(0);
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Failed to start server', { error: error.message });
     process.exit(1);
   }

@@ -1,4 +1,6 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+dotenv.config({ path: 'env' });
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -52,7 +54,7 @@ async function startServer() {
     paymentEventHandler.setupEventHandlers(kafkaConsumer);
 
     // Start consuming events
-    kafkaConsumer.run().catch(error => {
+    kafkaConsumer.run().catch((error: any) => {
       logger.error('Error in Kafka consumer', { error: error.message });
     });
 
@@ -98,7 +100,7 @@ async function startServer() {
       process.exit(0);
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Failed to start server', { error: error.message });
     process.exit(1);
   }

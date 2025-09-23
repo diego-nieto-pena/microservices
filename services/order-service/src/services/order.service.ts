@@ -34,7 +34,7 @@ export class OrderService {
 
       return order;
     } catch (error) {
-      this.logger.error('Failed to create order', { error: error.message });
+      this.logger.error('Failed to create order', { error: error instanceof Error ? error.message : String(error) });
       throw error;
     }
   }
@@ -50,7 +50,7 @@ export class OrderService {
     } catch (error) {
       this.logger.error('Failed to update order status', { 
         orderId: event.data.orderId,
-        error: error.message 
+        error: error instanceof Error ? error.message : String(error)
       });
       throw error;
     }
@@ -76,7 +76,7 @@ export class OrderService {
     } catch (error) {
       this.logger.error('Failed to cancel order', { 
         orderId: event.data.orderId,
-        error: error.message 
+        error: error instanceof Error ? error.message : String(error)
       });
       throw error;
     }
@@ -109,7 +109,7 @@ export class OrderService {
     } catch (error) {
       this.logger.error('Failed to cancel order', { 
         orderId: event.data.orderId,
-        error: error.message 
+        error: error instanceof Error ? error.message : String(error)
       });
       throw error;
     }
@@ -135,7 +135,7 @@ export class OrderService {
     } catch (error) {
       this.logger.error('Failed to complete order', { 
         orderId: event.data.orderId,
-        error: error.message 
+        error: error instanceof Error ? error.message : String(error)
       });
       throw error;
     }
@@ -161,7 +161,7 @@ export class OrderService {
     } catch (error) {
       this.logger.error('Failed to cancel order', { 
         orderId: event.data.orderId,
-        error: error.message 
+        error: error instanceof Error ? error.message : String(error)
       });
       throw error;
     }
