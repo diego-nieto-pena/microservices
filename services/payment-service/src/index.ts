@@ -21,9 +21,26 @@ const logger = new Logger('payment-service', LogLevel.INFO);
 
 async function startServer() {
   try {
-    // Initialize database
-    await initializeDatabase();
-    logger.info('Database initialized successfully');
+    // Initialize database with retry logic
+    let dbAttempts = 0;
+    const maxDbAttempts = 5;
+    const dbRetryDelay = 3000; // 3 seconds
+
+    while (dbAttempts < maxDbAttempts) {
+      try {
+        await initializeDatabase();
+        logger.info('Database initialized successfully');
+        break; // Exit loop on success
+      } catch (error: any) {
+        dbAttempts++;
+        if (dbAttempts >= maxDbAttempts) {
+          logger.error('Failed to initialize database after multiple attempts', { error: error.message });
+          throw error;
+        }
+        logger.warn(`Failed to initialize database, retrying in ${dbRetryDelay / 1000}s...`, { attempt: dbAttempts, error: error.message });
+        await new Promise(res => setTimeout(res, dbRetryDelay));
+      }
+    }
 
     // Initialize Kafka producer and consumer
     const kafkaProducer = new KafkaProducer(kafka);

@@ -6,7 +6,7 @@ const zod_1 = require("zod");
 exports.BaseEventSchema = zod_1.z.object({
     eventId: zod_1.z.string().uuid(),
     eventType: zod_1.z.string(),
-    timestamp: zod_1.z.date(),
+    timestamp: zod_1.z.coerce.date(), // Corrected: Coerce string to Date
     sagaId: zod_1.z.string().uuid(),
     correlationId: zod_1.z.string().uuid(),
     data: zod_1.z.record(zod_1.z.any()),
@@ -68,7 +68,7 @@ exports.InventoryReservedEventSchema = exports.BaseEventSchema.extend({
         items: zod_1.z.array(zod_1.z.object({
             productId: zod_1.z.string(),
             quantity: zod_1.z.number().positive(),
-            reservedAt: zod_1.z.date(),
+            reservedAt: zod_1.z.coerce.date(), // Corrected: Coerce string to Date
         })),
     }),
 });
@@ -79,7 +79,7 @@ exports.InventoryReleasedEventSchema = exports.BaseEventSchema.extend({
         items: zod_1.z.array(zod_1.z.object({
             productId: zod_1.z.string(),
             quantity: zod_1.z.number().positive(),
-            releasedAt: zod_1.z.date(),
+            releasedAt: zod_1.z.coerce.date(), // Corrected: Coerce string to Date
         })),
     }),
 });

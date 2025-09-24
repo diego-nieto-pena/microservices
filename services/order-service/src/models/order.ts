@@ -73,7 +73,7 @@ export class OrderRepository {
     return {
       id: row.id,
       customerId: row.customer_id,
-      items: JSON.parse(row.items),
+      items: row.items,
       totalAmount: parseFloat(row.total_amount),
       status: row.status,
       createdAt: new Date(row.created_at),

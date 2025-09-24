@@ -25,6 +25,7 @@ RUN rm -f package-lock.json && \
 # Copy service source code
 COPY services/inventory-service/src ./src
 COPY services/inventory-service/tsconfig.json ./
+COPY services/inventory-service/src/database/migrations ./dist/database/migrations
 
 # Ensure shared is available in node_modules
 RUN mkdir -p ./node_modules/@saga-pattern/shared && \

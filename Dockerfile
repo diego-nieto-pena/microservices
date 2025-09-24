@@ -25,6 +25,7 @@ RUN npm pkg delete dependencies['@saga-pattern/shared'] || true \
 COPY services/order-service/src ./src
 COPY services/order-service/tsconfig.json ./
 RUN npm run build
+COPY services/order-service/src/database/migrations ./dist/database/migrations
 
 EXPOSE 3000
 CMD ["npm", "start"]
@@ -45,6 +46,7 @@ RUN npm pkg delete dependencies['@saga-pattern/shared'] || true \
 COPY services/risk-service/src ./src
 COPY services/risk-service/tsconfig.json ./
 RUN npm run build
+COPY services/risk-service/src/database/migrations ./dist/database/migrations
 
 EXPOSE 3000
 CMD ["npm", "start"]
@@ -65,6 +67,7 @@ RUN npm pkg delete dependencies['@saga-pattern/shared'] || true \
 COPY services/inventory-service/src ./src
 COPY services/inventory-service/tsconfig.json ./
 RUN npm run build
+COPY services/inventory-service/src/database/migrations ./dist/database/migrations
 
 EXPOSE 3000
 CMD ["npm", "start"]
@@ -85,6 +88,7 @@ RUN npm pkg delete dependencies['@saga-pattern/shared'] || true \
 COPY services/payment-service/src ./src
 COPY services/payment-service/tsconfig.json ./
 RUN npm run build
+COPY services/payment-service/src/database/migrations ./dist/database/migrations
 
 EXPOSE 3000
 CMD ["npm", "start"]

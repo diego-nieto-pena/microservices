@@ -20,12 +20,26 @@ const logger = new Logger('order-service', LogLevel.INFO);
 
 async function startServer() {
   try {
-    // Delay to allow DB to initialize
-    await new Promise(res => setTimeout(res, 5000));
+    // Initialize database with retry logic
+    let dbAttempts = 0;
+    const maxDbAttempts = 5;
+    const dbRetryDelay = 3000; // 3 seconds
 
-    // Initialize database
-    await initializeDatabase();
-    logger.info('Database initialized successfully');
+    while (dbAttempts < maxDbAttempts) {
+      try {
+        await initializeDatabase();
+        logger.info('Database initialized successfully');
+        break; // Exit loop on success
+      } catch (error: any) {
+        dbAttempts++;
+        if (dbAttempts >= maxDbAttempts) {
+          logger.error('Failed to initialize database after multiple attempts', { error: error.message });
+          throw error;
+        }
+        logger.warn(`Failed to initialize database, retrying in ${dbRetryDelay / 1000}s...`, { attempt: dbAttempts, error: error.message });
+        await new Promise(res => setTimeout(res, dbRetryDelay));
+      }
+    }
 
     // Initialize Kafka producer and consumer
     const kafkaProducer = new KafkaProducer(kafka);
@@ -35,11 +49,31 @@ async function startServer() {
     await kafkaConsumer.connect();
     logger.info('Kafka connections established');
 
-    // Subscribe to topics
-    await kafkaConsumer.subscribe(KAFKA_TOPICS.RISK_EVENTS);
-    await kafkaConsumer.subscribe(KAFKA_TOPICS.INVENTORY_EVENTS);
-    await kafkaConsumer.subscribe(KAFKA_TOPICS.PAYMENT_EVENTS);
-    logger.info('Subscribed to Kafka topics');
+    // Subscribe to topics with retry logic
+    const topicsToSubscribe = [
+      KAFKA_TOPICS.RISK_EVENTS,
+      KAFKA_TOPICS.INVENTORY_EVENTS,
+      KAFKA_TOPICS.PAYMENT_EVENTS,
+    ];
+    let attempts = 0;
+    const maxAttempts = 5;
+    const retryDelay = 3000; // 3 seconds
+
+    while (attempts < maxAttempts) {
+      try {
+        await Promise.all(topicsToSubscribe.map(topic => kafkaConsumer.subscribe(topic)));
+        logger.info('Successfully subscribed to Kafka topics');
+        break; // Exit loop on success
+      } catch (error: any) {
+        attempts++;
+        if (attempts >= maxAttempts) {
+          logger.error('Failed to subscribe to Kafka topics after multiple attempts', { error: error.message });
+          throw error;
+        }
+        logger.warn(`Failed to subscribe to topics, retrying in ${retryDelay / 1000}s...`, { attempt: attempts, error: error.message });
+        await new Promise(res => setTimeout(res, retryDelay));
+      }
+    }
 
     // Initialize services
     const orderRepository = new OrderRepository(pool);

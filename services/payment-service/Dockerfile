@@ -25,6 +25,8 @@ RUN rm -f package-lock.json && \
 # Copy service source code
 COPY services/payment-service/src ./src
 COPY services/payment-service/tsconfig.json ./
+COPY services/payment-service/src/database/migrations ./dist/database/migrations
+
 
 # Ensure shared is available in node_modules
 RUN mkdir -p ./node_modules/@saga-pattern/shared && \
